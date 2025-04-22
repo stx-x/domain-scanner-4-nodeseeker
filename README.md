@@ -36,7 +36,7 @@ pip3 install -r requirements.txt
 
 从文件读取域名列表进行扫描:
 ```
-pythoh3 main.py -t .com .org -f domains.txt -o results.txt
+python3 main.py -t .com .org -f domains.txt -o results.txt
 ```
 
 使用自定义生成器函数:
