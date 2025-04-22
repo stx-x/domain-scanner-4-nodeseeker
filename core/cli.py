@@ -15,7 +15,7 @@ import logging
 from typing import Dict, Any, List, Optional
 
 # 导入项目其他模块
-from core.scanner import DomainScanner
+from .scanner import DomainScanner
 
 # 配置日志
 logging.basicConfig(
@@ -26,9 +26,28 @@ logger = logging.getLogger("cli")
 
 # 程序版本和描述
 PROGRAM_NAME = "Domain Availability Scanner"
-VERSION = "1.0.0"
+VERSION = "0.1.1"
 DESCRIPTION = "基于RDAP协议的域名可用性扫描工具"
 
+class ChineseArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        # 常见错误消息的中文替换
+        message = message.replace("the following arguments are required:", "缺少以下必需参数:")
+        message = message.replace("expected one argument", "此选项需要一个参数值")
+        message = message.replace("unrecognized arguments", "无法识别的参数")
+        message = message.replace("not allowed with argument", "不能与参数一起使用")
+        message = message.replace("argument -", "参数 -")
+        message = message.replace("one of the arguments", "以下参数之一")
+        message = message.replace("is required", "是必需的")
+        message = message.replace("must be specified", "必须指定")
+
+        self.exit(2, f"错误: {message}\n")
+
+    def print_help(self, file=None):
+        super().print_help(file)
+
+    def print_usage(self, file=None):
+        super().print_usage(file)
 
 def parse_arguments() -> argparse.Namespace:
     """
@@ -37,7 +56,7 @@ def parse_arguments() -> argparse.Namespace:
     返回:
         解析后的参数对象
     """
-    parser = argparse.ArgumentParser(
+    parser = ChineseArgumentParser(
         description=f"{PROGRAM_NAME} v{VERSION} - {DESCRIPTION}",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -67,9 +86,7 @@ def parse_arguments() -> argparse.Namespace:
                         version=f"{PROGRAM_NAME} v{VERSION}")
 
     args = parser.parse_args()
-
     return args
-
 
 def validate_arguments(args: argparse.Namespace) -> Optional[str]:
     """

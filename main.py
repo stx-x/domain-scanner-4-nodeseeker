@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-domain_scanner.py
+main.py
 
 域名可用性扫描工具的主程序入口点。
 这个脚本是用户执行的主要入口，它调用命令行接口进行参数处理
@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # 导入命令行接口模块
-from cli import main
+from core.cli import main
 
 if __name__ == "__main__":
     # 调用命令行接口的主函数并传递退出代码
