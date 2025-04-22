@@ -25,8 +25,8 @@ cd domain-scanner-4-nodeseeker
 ```
 
 2. 安装依赖
+你需要配置虚拟环境，如果你不知道是什么，看看这个[venv](https://docs.python.org/zh-cn/3.13/tutorial/venv.html)
 ```
-# 你需要配置虚拟环境，如果你不知道是什么，看看这个[venv](https://docs.python.org/zh-cn/3.13/tutorial/venv.html)
 pip3 install -r requirements.txt
 ```
 
