@@ -14,7 +14,7 @@
 
 ### 要求
 - Python 3.7+
-- 必要的Python库: requests, argparse
+- 必要的Python库: requests
 
 ### 安装步骤
 
@@ -26,7 +26,8 @@ cd domain-scanner-4-nodeseeker
 
 2. 安装依赖
 ```
-pip install -r requirements.txt
+# 你需要配置虚拟环境，如果你不知道是什么，看看这个[venv](https://docs.python.org/zh-cn/3.13/tutorial/venv.html)
+pip3 install -r requirements.txt
 ```
 
 ## 使用方法
@@ -35,21 +36,21 @@ pip install -r requirements.txt
 
 从文件读取域名列表进行扫描:
 ```
-pytho3 domain_scanner.py -t .com .org -f domains.txt -o results.txt
+pythoh3 main.py -t .com .org -f domains.txt -o results.txt
 ```
 
 使用自定义生成器函数:
 ```
-python3 domain_scanner.py -t .li .de -g my_generator.py -o results.txt
+python3 main.py -t .li .de -g my_generator.py -o results.txt
 ```
 
 ### 参数说明
 
 ```
-用法: domain_scanner.py [选项]
+用法: main.py [选项]
 
 选项:
-  -t, --tlds TLD [TLD ...]    要检查的顶级域名列表 (例如: .com .org .net)
+  -t, --tlds TLD [TLD ...]     要检查的顶级域名列表 (例如: .com .org .net)
   -f, --file FILE              从文件读取域名列表
   -g, --generator-file FILE    使用自定义生成器函数文件
   -d, --delay DELAY            查询间隔(秒) [默认: 1.0]
@@ -65,6 +66,9 @@ python3 domain_scanner.py -t .li .de -g my_generator.py -o results.txt
 example
 domain
 mysite
+baidu
+google
+github
 ```
 
 工具会自动将这些基础名称与指定的TLD组合，如 `example.com`, `example.org` 等。
@@ -218,13 +222,13 @@ def generate_domains():
 ### 检查短域名可用性
 ```
 # 检查所有3字符.com和.net域名
-python domain_scanner.py -t .com .net -g generators/three_chars.py -o short_domains.txt
+python3 main.py -t .com .net -g generators/three_chars.py -o short_domains.txt
 ```
 
 ### 检查包含特定关键词的域名
 ```
 # 检查包含"crypto"的域名
-python domain_scanner.py -t .com .io -f keywords/crypto_domains.txt -o crypto_domains.txt
+python3 main.py -t .com .io -f keywords/crypto_domains.txt -o crypto_domains.txt
 ```
 
 ## 注意事项
