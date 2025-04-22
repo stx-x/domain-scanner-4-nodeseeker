@@ -36,12 +36,12 @@ pip3 install -r requirements.txt
 
 从文件读取域名列表进行扫描:
 ```
-python3 main.py -t .com .org -f domains.txt -o results.txt
+python3 main.py -t .com .org -f domains.txt
 ```
 
 使用自定义生成器函数:
 ```
-python3 main.py -t .li .de -g my_generator.py -o results.txt
+python3 main.py -t .li .de -g my_generator.py -o results.md
 ```
 
 ### 参数说明
@@ -50,12 +50,12 @@ python3 main.py -t .li .de -g my_generator.py -o results.txt
 用法: main.py [选项]
 
 选项:
-  -t, --tlds TLD [TLD ...]     要检查的顶级域名列表 (例如: .com .org .net)
-  -f, --file FILE              从文件读取域名列表
-  -g, --generator-file FILE    使用自定义生成器函数文件
+  -t, --tlds TLD [TLD ...]     要检查的顶级域名列表 (例如: .com .org .net) [必需]
+  -f, --file FILE              从文件读取域名列表 [和 -g 二选一]
+  -g, --generator-file FILE    使用自定义生成器函数文件 [和 -f 二选一]
   -d, --delay DELAY            查询间隔(秒) [默认: 1.0]
   -r, --max-retries RETRIES    最大重试次数 [默认: 2]
-  -o, --output FILE            输出结果文件 [必需参数]
+  -o, --output FILE            输出结果文件 [可选，最好是.md格式]
   -v, --verbose                详细输出模式, 不能注册的扫描结果也会显示
 ```
 
@@ -222,13 +222,13 @@ def generate_domains():
 ### 检查短域名可用性
 ```
 # 检查所有3字符.com和.net域名
-python3 main.py -t .com .net -g generators/three_chars.py -o short_domains.txt
+python3 main.py -t .com .net -g generators/three_chars.py -o short_domains.md
 ```
 
 ### 检查包含特定关键词的域名
 ```
 # 检查包含"crypto"的域名
-python3 main.py -t .com .io -f keywords/crypto_domains.txt -o crypto_domains.txt
+python3 main.py -t .com .io -f keywords/crypto_domains.txt -o crypto_domains.md
 ```
 
 ## 注意事项

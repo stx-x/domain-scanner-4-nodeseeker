@@ -12,6 +12,7 @@ import sys
 import argparse
 import os
 import logging
+import datetime
 from typing import Dict, Any, List, Optional
 
 # 导入项目其他模块
@@ -64,8 +65,6 @@ def parse_arguments() -> argparse.Namespace:
     # 必需参数
     parser.add_argument("-t", "--tlds", nargs="+", required=True,
                         help="要检查的顶级域名列表 (例如: .com .org .net)")
-    parser.add_argument("-o", "--output", type=str, required=True,
-                        help="输出结果文件")
 
     # 域名来源 (必须指定其中一个)
     source_group = parser.add_argument_group("域名来源 (必须指定其中一个)")
@@ -76,6 +75,8 @@ def parse_arguments() -> argparse.Namespace:
                                  help="使用自定义生成器函数文件")
 
     # 可选参数
+    parser.add_argument("-o", "--output", type=str, required=False,
+                        help="输出结果文件")
     parser.add_argument("-d", "--delay", type=float, default=1.0,
                         help="查询间隔(秒)")
     parser.add_argument("-r", "--max-retries", type=int, default=2,
@@ -88,9 +89,41 @@ def parse_arguments() -> argparse.Namespace:
     args = parser.parse_args()
     return args
 
+def confirm_prompt(question: str, default: str = "y") -> bool:
+    """
+    向用户询问是否确认操作
+
+    参数:
+        question: 问题文本
+        default: 默认回答 ('y' 或 'n')
+
+    返回:
+        True 表示用户确认，False 表示用户拒绝
+    """
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+
+    if default == "y":
+        prompt = " [Y/n] "
+    elif default == "n":
+        prompt = " [y/N] "
+    else:
+        prompt = " [y/n] "
+
+    while True:
+        print(question + prompt, end="")
+        choice = input().lower()
+
+        if choice == "":
+            return True if default == "y" else False
+        elif choice in valid:
+            return valid[choice]
+        else:
+            print("请输入 'yes' 或 'no' (或 'y' 或 'n')")
+
 def validate_arguments(args: argparse.Namespace) -> Optional[str]:
     """
-    验证参数是否有效
+    验证参数是否有效，并处理确认逻辑
 
     参数:
         args: 解析后的参数对象
@@ -122,18 +155,68 @@ def validate_arguments(args: argparse.Namespace) -> Optional[str]:
     if args.max_retries < 0:
         return "最大重试次数不能为负数"
 
-    # 检查输出文件目录是否存在
-    output_dir = os.path.dirname(args.output)
-    if output_dir and not os.path.exists(output_dir):
-        return f"输出文件目录不存在: {output_dir}"
+    # 处理输出文件逻辑
+    if not args.output:
+        # 用户未提供输出文件路径，询问选项
+        print("\n输出选项:")
+        print("1. 使用默认输出文件")
+        print("2. 不保存结果到文件（仅在控制台显示）")
+        print("3. 手动指定输出文件")
 
-    # 检查是否能写入输出文件
-    try:
-        # 尝试创建或打开文件
-        with open(args.output, 'a'):
-            pass
-    except IOError as e:
-        return f"无法写入输出文件 '{args.output}': {e}"
+        while True:
+            choice = input("\n请选择 [1/2/3]: ").strip()
+
+            if choice == '1':
+                result_dir = os.path.join(os.getcwd(), "result")
+                if not os.path.exists(result_dir):
+                    try:
+                        os.makedirs(result_dir)
+                    except OSError as e:
+                        return f"无法创建result目录: {e}"
+                current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                default_output = os.path.join(result_dir, f"domain_scan_results_{current_time}.md")
+                print(f"将使用默认输出文件: '{default_output}'")
+                args.output = default_output
+                break
+            elif choice == '2':
+                print("不保存结果到文件，仅在控制台显示")
+                args.output = None  # 显式设置为None表示不使用输出文件
+                return None  # 验证通过，直接返回
+            elif choice == '3':
+                new_output = input("请输入输出文件路径: ").strip()
+                if new_output:
+                    args.output = new_output
+                    break
+                else:
+                    print("输入无效，请重新选择")
+            else:
+                print("选择无效，请输入1、2或3")
+
+    # 如果用户选择了输出文件（不是选项2），继续检查文件和目录
+    if args.output is not None:
+        # 检查输出文件是否已存在
+        if os.path.exists(args.output):
+            if not confirm_prompt(f"警告: 输出文件 '{args.output}' 已存在，继续操作将覆盖现有内容。是否继续?", default="n"):
+                return "用户取消操作：不覆盖现有文件"
+
+        # 检查输出文件目录是否存在
+        output_dir = os.path.dirname(args.output)
+        if output_dir and not os.path.exists(output_dir):
+            if confirm_prompt(f"输出目录 '{output_dir}' 不存在。是否创建?"):
+                try:
+                    os.makedirs(output_dir)
+                except OSError as e:
+                    return f"无法创建输出目录 '{output_dir}': {e}"
+            else:
+                return "用户取消操作：不创建输出目录"
+
+        # 检查是否能写入输出文件
+        try:
+            # 尝试创建或打开文件
+            with open(args.output, 'a'):
+                pass
+        except IOError as e:
+            return f"无法写入输出文件 '{args.output}': {e}"
 
     return None  # 验证通过
 
@@ -166,7 +249,11 @@ def print_config_summary(args: argparse.Namespace) -> None:
     elif args.generator_file:
         print(f"域名来源: 自定义生成器 '{args.generator_file}'")
 
-    print(f"输出文件: {args.output}")
+    if args.output:
+        print(f"输出文件: {args.output}")
+    else:
+        print("输出文件: 不保存结果到文件（仅在控制台显示）")
+
     print(f"查询间隔: {args.delay} 秒")
     print(f"最大重试: {args.max_retries} 次")
     print(f"详细模式: {'开启' if args.verbose else '关闭'}")
@@ -187,7 +274,7 @@ def run_scanner(args: argparse.Namespace) -> int:
         # 初始化扫描器
         scanner = DomainScanner(
             tlds=args.tlds,
-            output_file=args.output,
+            output_file=args.output,  # 如果为None，则不保存到文件
             delay=args.delay,
             max_retries=args.max_retries,
             verbose=args.verbose

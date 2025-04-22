@@ -61,6 +61,8 @@ venv.bak/
 
 # 项目特定文件
 results.txt
+results.md
+result/
 *.log
 logs/
 tmp/

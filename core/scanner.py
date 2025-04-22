@@ -32,7 +32,7 @@ class DomainScanner:
 
     def __init__(self,
                 tlds: List[str],
-                output_file: str,
+                output_file: Optional[str],  # 修改为可选参数
                 delay: float = 1.0,
                 max_retries: int = 2,
                 verbose: bool = False):
@@ -41,7 +41,7 @@ class DomainScanner:
 
         参数:
             tlds: 待扫描的顶级域名列表 ['.com', '.org', '.net']
-            output_file: 结果输出文件路径
+            output_file: 结果输出文件路径，None表示不保存到文件
             delay: 查询间隔(秒)
             max_retries: 重试次数
             verbose: 是否输出详细信息
@@ -51,6 +51,9 @@ class DomainScanner:
         self.delay = delay
         self.max_retries = max_retries
         self.verbose = verbose
+
+        # 输出文件句柄
+        self.output_handle = None
 
         # 初始化组件
         self.rdap_client = RdapClient(max_retries=max_retries)
@@ -71,8 +74,9 @@ class DomainScanner:
         # 检查TLD是否受支持
         self._validate_tlds()
 
-        # 打开输出文件
-        self._open_output_file()
+        # 打开输出文件（如果需要）
+        if self.output_file:
+            self._open_output_file()
 
     def _validate_tlds(self) -> None:
         """验证配置的TLD是否受支持"""
@@ -85,13 +89,23 @@ class DomainScanner:
 
     def _open_output_file(self) -> None:
         """打开输出文件，处理可能的错误"""
+        if not self.output_file:
+            return  # 如果不需要输出文件，直接返回
+
         try:
             self.output_handle = open(self.output_file, 'w', encoding='utf-8')
             # 写入文件头
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.output_handle.write(f"# 域名可用性扫描结果 - {timestamp}\n")
             self.output_handle.write(f"# 扫描TLD: {', '.join(self.tlds)}\n")
-            self.output_handle.write("# 格式: domain,status,status_cn\n\n")
+
+            # 更新格式说明
+            self.output_handle.write("# 格式: 域名 | 状态 | 中文状态 | 检查时间\n")
+
+            # 添加表头和分隔线，增强可读性
+            self.output_handle.write("\n")
+            self.output_handle.write(f"{'域名':<30} | {'状态':<15} | {'中文状态':<15} | 检查时间\n")
+            self.output_handle.write("-" * 30 + "-+-" + "-" * 15 + "-+-" + "-" * 15 + "-+-" + "-" * 19 + "\n")
             self.output_handle.flush()
         except IOError as e:
             logger.error(f"无法打开输出文件 '{self.output_file}': {e}")
@@ -267,7 +281,14 @@ class DomainScanner:
         """
         if self.output_handle and result['available']:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.output_handle.write(f"{result['domain']},{result['status']},{result['status_cn']},{timestamp}\n")
+            # 使用固定宽度的列格式，提高可读性
+            domain_str = f"{result['domain']:<30}"  # 域名左对齐，宽度30
+            status_str = f"{result['status']:<15}"  # 状态左对齐，宽度15
+            status_cn_str = f"{result['status_cn']:<15}"  # 中文状态左对齐，宽度15
+
+            # 添加分隔符，使行更易读
+            line = f"{domain_str} | {status_str} | {status_cn_str} | {timestamp}\n"
+            self.output_handle.write(line)
             self.output_handle.flush()  # 立即写入
 
     def _print_progress(self) -> None:
@@ -343,6 +364,9 @@ class DomainScanner:
 
     def _write_summary_to_file(self) -> None:
         """将扫描统计信息写入结果文件"""
+        if not self.output_handle:
+            return  # 如果没有输出文件，直接返回
+
         try:
             self.output_handle.write("\n\n# --- 扫描统计 ---\n")
 
