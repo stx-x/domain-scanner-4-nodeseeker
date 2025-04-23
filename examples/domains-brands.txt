@@ -1,0 +1,35 @@
+# 品牌域名示例
+# 包含一些流行品牌的变种，仅用于演示
+
+# 社交媒体
+facebook
+fbook
+faceb00k
+instagram
+insta
+twitter
+tweet
+tiktok
+linkedin
+pinterest
+snapchat
+reddit
+discord
+
+# 科技公司
+google
+g00gle
+microsoft
+apple
+amazon
+netflix
+spotify
+airbnb
+uber
+tesla
+nvidia
+intel
+amd
+
+# 注意: 本文件仅用于演示目的
+# 请勿将此工具用于侵犯商标权或其他不当用途

@@ -1,0 +1,11 @@
+# DomainSeeker 域名列表
+# 每行一个域名基础部分（不含TLD）
+# 编辑此文件添加您想要检查的域名
+
+# 示例域名 (使用时请删除或替换这些示例)
+edu
+org
+example
+mywebsite
+cool-app
+domain-seeker

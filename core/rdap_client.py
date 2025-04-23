@@ -15,10 +15,6 @@ import logging
 import re
 
 # 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger("rdap_client")
 
 # RDAP服务配置
@@ -80,7 +76,7 @@ class RdapClient:
 
         # 设置默认请求头
         self.headers = {
-            'User-Agent': user_agent or 'Domain-Availability-Scanner/1.0 (https://github.com/yourusername/domain-scanner)',
+            'User-Agent': user_agent or 'DomainSeeker/2.0 (https://github.com/yourusername/domainseeker)',
             'Accept': 'application/rdap+json'
         }
 
@@ -516,118 +512,3 @@ class RdapClient:
         """关闭连接会话"""
         if self.session:
             self.session.close()
-
-if __name__ == "__main__":
-    # 简单的测试函数
-    def test_rdap_client():
-        # 测试直接支持的TLD
-        print("\n=== 测试直接支持的TLD ===")
-        client = RdapClient(prefer_direct=True)
-
-        # 测试.ch域名
-        print("\n检查.ch域名...")
-        result = client.check_domain("example.ch")
-        print(f"Domain: {result['domain']}")
-        print(f"Status: {result['status']} ({result['status_cn']})")
-        print(f"Available: {result['available']}")
-        print(f"Response time: {result['response_time']} ms")
-        print(f"Raw code: {result['raw_code']}")
-        print(f"RDAP Server: {result['rdap_server']}")
-
-        # 测试通过RDAP.org
-        print("\n=== 测试通过RDAP.org ===")
-        client2 = RdapClient(prefer_direct=False)
-
-        # 测试.com域名
-        print("\n检查.com域名...")
-        result = client2.check_domain("google.com")
-        print(f"Domain: {result['domain']}")
-        print(f"Status: {result['status']} ({result['status_cn']})")
-        print(f"Available: {result['available']}")
-        print(f"Response time: {result['response_time']} ms")
-        print(f"Raw code: {result['raw_code']}")
-        print(f"RDAP Server: {result['rdap_server']}")
-
-        # 测试不常见的TLD
-        unusual_tld = "example.xyz"
-        print(f"\n检查不常见TLD: {unusual_tld}...")
-        result = client2.check_domain(unusual_tld)
-        print(f"Domain: {result['domain']}")
-        print(f"Status: {result['status']} ({result['status_cn']})")
-        print(f"Available: {result['available']}")
-        print(f"Response time: {result['response_time']} ms")
-        print(f"Raw code: {result['raw_code']}")
-        print(f"RDAP Server: {result['rdap_server']}")
-
-        # 测试回退逻辑
-        print("\n=== 测试回退逻辑 ===")
-        client3 = RdapClient(prefer_direct=True, timeout=1)  # 设置较短的超时时间以便测试回退
-
-        print("\n故意使用错误服务器...")
-        # 临时修改服务器地址以触发错误
-        old_server = DIRECT_RDAP_SERVERS['.ch']
-        DIRECT_RDAP_SERVERS['.ch'] = 'https://nonexistent.example.com/domain/{domain}'
-
-        try:
-            result = client3.check_domain("test123456.ch")
-            print(f"回退结果: {result['status']} (服务器: {result['rdap_server']})")
-        finally:
-            # 恢复正确的服务器地址
-            DIRECT_RDAP_SERVERS['.ch'] = old_server
-
-        # 测试随机域名（未注册情况）
-        print("\n=== 测试随机域名（未注册情况）===")
-        # 生成随机域名函数
-        def generate_random_domain(length=12, tld=".com"):
-            """生成一个随机域名，很可能未被注册"""
-            import random
-            import string
-            import time
-
-            # 使用当前时间戳作为随机性的一部分，增加未注册概率
-            timestamp = int(time.time())
-            random_part = ''.join(random.choices(string.ascii_lowercase, k=length-len(str(timestamp))))
-            domain = f"{random_part}{timestamp}{tld}"
-            return domain
-
-        # 测试几个不同TLD的随机域名
-        for tld in ['.com', '.org', '.net', '.info', '.xyz']:
-            random_domain = generate_random_domain(tld=tld)
-            print(f"\n检查随机域名: {random_domain}...")
-            result = client.check_domain(random_domain)
-            print(f"Domain: {result['domain']}")
-            print(f"Status: {result['status']} ({result['status_cn']})")
-            print(f"Available: {result['available']}")
-            print(f"Response time: {result['response_time']} ms")
-            print(f"Raw code: {result['raw_code']}")
-            print(f"RDAP Server: {result['rdap_server']}")
-
-            # 如果不可用，打印警告信息（这种情况应该很少见）
-            if not result['available']:
-                print(f"警告: 随机生成的域名 {random_domain} 竟然已被注册!")
-
-        # 直接测试已知的未注册域名
-        for tld in ['.com', '.org']:
-            # 生成一个极其复杂、几乎不可能被注册的域名
-            complex_domain = f"thisisaveryunlikelydomaintoberegistered{int(time.time())}{tld}"
-            print(f"\n检查复杂域名: {complex_domain}...")
-            result = client.check_domain(complex_domain)
-            print(f"Domain: {result['domain']}")
-            print(f"Status: {result['status']} ({result['status_cn']})")
-            print(f"Available: {result['available']}")
-            print(f"Response time: {result['response_time']} ms")
-            print(f"Raw code: {result['raw_code']}")
-            print(f"RDAP Server: {result['rdap_server']}")
-
-            # 如果这个域名也被注册，那真是奇怪了
-            if not result['available']:
-                print(f"警告: 极其复杂的域名 {complex_domain} 居然已被注册! 这太不寻常了。")
-
-        print("\n=== 测试完成 ===")
-
-        # 关闭客户端
-        client.close()
-        client2.close()
-        client3.close()
-
-    test_rdap_client()

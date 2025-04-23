@@ -1,0 +1,36 @@
+# 基础域名示例
+# 包含简单常见的域名基础部分
+
+# 单词
+example
+test
+demo
+sample
+website
+blog
+app
+site
+web
+cloud
+online
+digital
+tech
+dev
+code
+data
+info
+help
+support
+service
+
+# 双词组合(无连字符)
+mysite
+myapp
+myblog
+mycloud
+techblog
+appdev
+webcloud
+datacloud
+techapp
+devsite

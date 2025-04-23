@@ -1,0 +1,39 @@
+# DomainSeeker 配置文件示例
+# 复制此文件到项目根目录的config.txt以应用这些设置
+
+# 要扫描的顶级域名列表，多个TLD用逗号分隔
+# 可以扫描多个TLD，但注意数量越多，扫描时间越长
+tlds = .com, .org, .net, .io, .app, .dev
+
+# 域名源设置: auto, file, generator
+# auto: 自动选择存在的文件 (优先使用domains.txt)
+# file: 仅使用domains.txt文件
+# generator: 仅使用generator_func.py文件
+domain_source = auto
+
+# 查询间隔(秒)
+# 较小的值可以加快扫描速度，但可能触发服务器限制
+# 较大的值更安全，但扫描速度较慢
+# 建议范围: 0.5-2.0秒
+delay = 0.8
+
+# 查询失败时的最大重试次数
+# 较大的值可以提高成功率，但会增加扫描时间
+max_retries = 3
+
+# HedgeDoc服务URL，用于上传结果
+# 默认使用公共服务，您也可以使用自己的实例
+hedgedoc_url = https://domain.gfw.li
+
+# 通知方法: none, email, telegram
+# 设置为none禁用通知
+# 设置为email启用邮件通知
+# 设置为telegram启用Telegram通知
+notification_method = telegram
+
+# Email通知配置
+notification_email = your-email@example.com
+
+# Telegram通知配置
+notification_telegram_token = 1234567890:AAHHGgE7GhklmNoPqRsTuVwXyZ
+notification_telegram_chat_id = 123456789

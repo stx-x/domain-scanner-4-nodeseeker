@@ -1,4 +1,4 @@
-# Domain Availability Scanner
+# Domain Seeker
 
 一个高效、灵活的域名可注册性检测工具，基于RDAP协议检查多种顶级域名(TLD)的可用性。
 
@@ -6,9 +6,9 @@
 
 - 使用现代RDAP协议进行域名查询，比传统WHOIS更快速可靠
 - 支持多种顶级域名(TLD)检测
-- 多种域名获取方式：文件导入或自定义生成函数
-- 智能重试和错误处理机制
-- 结果实时输出并保存到文件
+- 两种域名获取方式：文件导入或自定义生成函数
+- 全后台运行，无需人工干预，省心
+- 结果直接浏览器打开URL查看
 
 ## 安装方法
 
@@ -29,34 +29,58 @@ cd domain-scanner-4-nodeseeker
 ```
 pip3 install -r requirements.txt
 ```
+## 文件说明
 
+```
+DomainSeeker
+.
+├── config.txt            // 用户配置文件 重要！！
+├── core
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── config_parser.py
+│   ├── generators.py
+│   ├── notifier.py
+│   ├── rdap_client.py
+│   ├── scanner.py
+│   └── uploader.py
+├── domains.txt          // 用户自定义域名列表 重要！！
+├── examples
+│   ├── config.txt
+│   ├── domains-basic.txt
+│   ├── domains-brands.txt
+│   ├── domains-keywords.txt
+│   ├── generator-basic.py
+│   ├── generator-patterns.py
+│   └── generator-wordlist.py
+├── generator_func.py   // 用户自定义域名生成函数 重要！！
+├── log.txt             // 日志文件
+├── main.py             // 主程序入口文件
+├── pid
+├── README.md
+├── requirements.txt
+└── results.txt         // 扫描结果URL记录文件 重要！！
+```
 ## 使用方法
 
 ### 基本用法
 
-从文件读取域名列表进行扫描:
-```
-python3 main.py -t .com .org -f domains.txt
-```
+1. 编辑配置文件 config.txt，查看这个文件自然就会了。examples 文件夹里面也有一个可供参考的配置文件。
+2. 编辑 domains.txt 或者 generator_func.py 文件，添加你需要扫描的域名。查看下面提到的格式要求。
+3. `python3 main.py` 启动扫描。程序后台运行，不需要人工干预。
+4. 扫描过程可以查看日志文件 log.txt 来获得详细信息。
+5. 扫描结果可以在 results.txt 文件中查看。
+6. 扫描结果是一个URL，例如：https://domain.gfw.li/s/fMiVoA6RC，可以在浏览器中打开即可查看。
 
-使用自定义生成器函数:
-```
-python3 main.py -t .li .de -g my_generator.py -o results.md
-```
-
-### 参数说明
+### 命令行参数说明
 
 ```
 用法: main.py [选项]
 
 选项:
-  -t, --tlds TLD [TLD ...]     要检查的顶级域名列表 (例如: .com .org .net) [必需]
-  -f, --file FILE              从文件读取域名列表 [和 -g 二选一]
-  -g, --generator-file FILE    使用自定义生成器函数文件 [和 -f 二选一]
-  -d, --delay DELAY            查询间隔(秒) [默认: 1.0]
-  -r, --max-retries RETRIES    最大重试次数 [默认: 2]
-  -o, --output FILE            输出结果文件 [可选，最好是.md格式]
-  -v, --verbose                详细输出模式, 不能注册的扫描结果也会显示
+  -h, --help                    显示帮助信息
+  -v, --verbose                 日志详细输出模式, 不能注册的扫描结果也会显示
+  --version                     显示版本信息
 ```
 
 ### 域名文件格式
@@ -79,11 +103,11 @@ github
 
 ### 创建生成器函数文件
 
-1. 创建一个Python文件(例如 `my_generator.py`)
+1. 创建一个Python文件 `generator_func.py`
 2. 在文件中定义一个名为 `generate_domains` 的函数
 3. 该函数应使用 `yield` 语句产生域名（不含TLD部分）
 
-示例 `my_generator.py`:
+示例 `generator_func.py`:
 
 ```python
 def generate_domains():
@@ -216,20 +240,6 @@ def generate_domains():
 3. 使用 `yield` 语句返回每个域名（不含TLD）
 4. 确保每个生成的域名只包含允许的字符（字母、数字和连字符）
 5. 避免生成无效域名（如以连字符开头或结尾）
-
-## 示例
-
-### 检查短域名可用性
-```
-# 检查所有3字符.com和.net域名
-python3 main.py -t .com .net -g generators/three_chars.py -o short_domains.md
-```
-
-### 检查包含特定关键词的域名
-```
-# 检查包含"crypto"的域名
-python3 main.py -t .com .io -f keywords/crypto_domains.txt -o crypto_domains.md
-```
 
 ## 注意事项
 

@@ -16,8 +16,6 @@ from typing import Generator, Set, Optional, Callable, List, Iterator, Dict, Any
 import logging
 
 # 配置日志
-logging.basicConfig(level=logging.INFO,
-                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("generators")
 
 # 域名验证相关常量
@@ -49,6 +47,7 @@ class DomainGenerator:
         logger.info(f"从文件加载域名: {filepath}")
         line_count = 0
         valid_count = 0
+        invalid_count = 0
 
         try:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
@@ -66,8 +65,17 @@ class DomainGenerator:
                             self.seen_domains.add(domain_base)
                             valid_count += 1
                             yield domain_base
+                    else:
+                        invalid_count += 1
+                        if invalid_count <= 5:  # 只记录前几个无效域名，避免日志过大
+                            logger.warning(f"无效的域名格式: '{domain_base}' (行 {line_count})")
+                        elif invalid_count == 6:
+                            logger.warning("更多无效域名省略...")
 
-            logger.info(f"文件解析完成。总行数: {line_count}, 有效域名: {valid_count}")
+            logger.info(f"文件解析完成。总行数: {line_count}, 有效域名: {valid_count}, 无效域名: {invalid_count}")
+
+            if valid_count == 0:
+                logger.warning(f"警告: 未从文件中找到有效域名，请检查文件格式是否正确")
 
         except UnicodeDecodeError as e:
             logger.error(f"文件编码错误: {e}")
@@ -102,6 +110,7 @@ class DomainGenerator:
             logger.info("使用自定义函数生成域名...")
             processed_count = 0
             valid_count = 0
+            invalid_count = 0
 
             for domain_base in generator_func():
                 processed_count += 1
@@ -117,15 +126,27 @@ class DomainGenerator:
                         self.seen_domains.add(domain_base)
                         valid_count += 1
                         yield domain_base
+                else:
+                    invalid_count += 1
+                    if invalid_count <= 5:  # 只记录前几个无效域名
+                        logger.warning(f"生成器函数返回无效的域名格式: '{domain_base}'")
+                    elif invalid_count == 6:
+                        logger.warning("更多无效域名省略...")
 
                 # 每处理一定数量的域名打印进度
                 if processed_count % 10000 == 0:
                     logger.info(f"已处理 {processed_count} 个域名，找到 {valid_count} 个有效域名")
 
-            logger.info(f"自定义函数执行完成。总处理: {processed_count}, 有效域名: {valid_count}")
+            logger.info(f"自定义函数执行完成。总处理: {processed_count}, 有效域名: {valid_count}, 无效域名: {invalid_count}")
 
+            if valid_count == 0:
+                logger.warning(f"警告: 生成器函数未返回有效域名，请检查函数实现")
+
+        except StopIteration:
+            # 正常终止生成器
+            pass
         except Exception as e:
-            logger.error(f"执行生成器函数时出错: {e}")
+            logger.error(f"执行生成器函数时出错: {e}", exc_info=True)
             raise ValueError(f"生成器函数执行失败: {e}")
 
     def _load_generator_from_file(self, filepath: str) -> Optional[Callable[[], Iterator[str]]]:
@@ -163,11 +184,13 @@ class DomainGenerator:
 
                 # 检查是否是可调用对象
                 if callable(generator_func):
+                    logger.info("成功加载generate_domains函数")
                     return cast(Callable[[], Iterator[str]], generator_func)
                 else:
                     logger.error("'generate_domains' 不是一个可调用的函数")
             else:
                 logger.error(f"在文件 {filepath} 中未找到 'generate_domains' 函数")
+                logger.info("生成器文件必须定义一个名为'generate_domains'的函数，该函数应返回域名迭代器")
 
             return None
 
@@ -205,69 +228,8 @@ class DomainGenerator:
     def reset(self) -> None:
         """重置生成器状态，清除去重缓存"""
         self.seen_domains.clear()
+        logger.debug("域名生成器已重置")
 
-
-# 辅助函数: 示例生成器函数
-def sample_generator() -> Generator[str, None, None]:
-    """示例生成器函数，生成一些样例域名"""
-    # 简单示例: 生成a-z开头的三字符域名
-    chars = 'abcdefghijklmnopqrstuvwxyz'
-    for c1 in chars:
-        for c2 in chars[:3]:  # 仅使用前几个字符作为示例
-            for c3 in chars[:3]:
-                yield f"{c1}{c2}{c3}"
-
-
-# 测试代码
-if __name__ == "__main__":
-    # 简单的测试函数
-    def test_generators():
-        generator = DomainGenerator()
-
-        print("\n=== 测试示例生成器函数 ===")
-        count = 0
-        for domain in generator.from_function(generator_func=sample_generator):
-            print(domain)
-            count += 1
-            if count >= 10:
-                print("...更多结果省略...")
-                break
-
-        # 创建临时测试文件
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.txt') as tmp:
-            tmp.write("example\n")
-            tmp.write("test-domain\n")
-            tmp.write("invalid--domain\n")  # 无效域名
-            tmp.write("012345\n")
-            tmp_path = tmp.name
-
-        print(f"\n=== 测试从文件加载域名: {tmp_path} ===")
-        try:
-            for domain in generator.from_file(tmp_path):
-                print(domain)
-        finally:
-            # 清理临时文件
-            os.unlink(tmp_path)
-
-        # 创建临时测试生成器文件
-        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.py') as tmp:
-            tmp.write("""
-def generate_domains():
-    \"\"\"测试生成器\"\"\"
-    yield "test1"
-    yield "test2"
-    yield "test-3"
-    yield "invalid--4"  # 无效域名
-""")
-            generator_path = tmp.name
-
-        print(f"\n=== 测试从文件加载生成器函数: {generator_path} ===")
-        try:
-            for domain in generator.from_function(generator_file=generator_path):
-                print(domain)
-        finally:
-            # 清理临时文件
-            os.unlink(generator_path)
-
-    test_generators()
+    def get_generated_count(self) -> int:
+        """获取已生成的域名数量"""
+        return len(self.seen_domains)

@@ -1,0 +1,61 @@
+# 关键词域名示例
+# 按主题分组的域名关键词
+
+# 技术类
+cloud
+server
+hosting
+domain
+crypto
+bitcoin
+blockchain
+ai
+ml
+data
+analytics
+iot
+robot
+cyber
+security
+privacy
+coding
+programming
+software
+hardware
+
+# 商业类
+business
+finance
+invest
+money
+bank
+shop
+store
+market
+sell
+buy
+deal
+trade
+offer
+sale
+discount
+premium
+pro
+elite
+
+# 创意类
+design
+art
+photo
+video
+music
+audio
+creative
+studio
+gallery
+media
+film
+movie
+game
+play
+fun
