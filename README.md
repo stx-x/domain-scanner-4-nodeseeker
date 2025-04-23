@@ -14,7 +14,7 @@
 
 ### 要求
 - Python 3.7+
-- 必要的Python库: requests
+- 必要的Python库: requests python-daemon
 
 ### 安装步骤
 
@@ -65,12 +65,12 @@ DomainSeeker
 
 ### 基本用法
 
-1. 编辑配置文件 config.txt，查看这个文件自然就会了。examples 文件夹里面也有一个可供参考的配置文件。
-2. 编辑 domains.txt 或者 generator_func.py 文件，添加你需要扫描的域名。查看下面提到的格式要求。
+1. 编辑配置文件 `config.txt`，查看这个文件自然就会了。`examples` 文件夹里面也有一个可供参考的配置文件。
+2. 编辑 `domains.txt` 或者 `generator_func.py` 文件，添加你需要扫描的域名。查看下面提到的格式要求。
 3. `python3 main.py` 启动扫描。程序后台运行，不需要人工干预。
-4. 扫描过程可以查看日志文件 log.txt 来获得详细信息。
-5. 扫描结果可以在 results.txt 文件中查看。
-6. 扫描结果是一个URL，例如：https://domain.gfw.li/s/fMiVoA6RC，可以在浏览器中打开即可查看。
+4. 扫描过程可以查看日志文件 `log.txt` 来获得详细信息。
+5. 扫描结果可以在 `results.txt` 文件中查看。
+6. 扫描结果是一个URL，例如：https://domain.gfw.li/s/fMiVoA6RC 可以在浏览器中打开即可查看。
 
 ### 命令行参数说明
 
